@@ -1,0 +1,148 @@
+/* ================= GENERAL ================= */
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0b0f1a;
+    color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 450px;
+    background: #141b2d;
+    padding: 25px;
+    border-radius: 20px;
+    box-sizing: border-box;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+}
+
+h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.subtitle {
+    text-align: center;
+    color: #b0b0b0;
+    margin-bottom: 30px;
+}
+
+/* ================= SECTIONS ================= */
+
+section {
+    margin-bottom: 30px;
+}
+
+h2 {
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+/* ================= INPUTS ================= */
+
+input,
+select {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    border: none;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+/* ================= BUTTONS ================= */
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 10px;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button:hover {
+    opacity: 0.9;
+}
+
+#saveContact {
+    background: #2563eb;
+    color: white;
+}
+
+#stopEmergency {
+    background: #22c55e;
+    color: white;
+}
+
+#startCheckIn,
+#viewHistory,
+#clearHistory {
+    background: #475569;
+    color: white;
+}
+
+/* ================= SOS BUTTON ================= */
+
+.sos-btn {
+    background: #dc2626;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    padding: 20px;
+}
+
+.sos-btn:hover {
+    background: #b91c1c;
+}
+
+/* ================= STATUS ================= */
+
+#status,
+#checkInStatus {
+    margin-top: 15px;
+    text-align: center;
+    font-weight: bold;
+}
+
+/* ================= CONTACTS ================= */
+
+#contactList {
+    list-style: none;
+    padding: 0;
+}
+
+#contactList li {
+    background: #1e293b;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+}
+
+.delete {
+    background: #ef4444;
+    color: white;
+    margin-top: 10px;
+}
+
+/* ================= HISTORY ================= */
+
+.history-item {
+    background: #1e293b;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+}
+
+.view {
+    background: #2563eb;
+    color: white;
+}

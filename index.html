@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guardian Network</title>
+
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Guardian Network</h1>
+
+        <p class="subtitle">
+            Help reaches you faster, even when the internet doesn't.
+        </p>
+
+        <!-- Emergency Contacts -->
+        <section class="contacts-section">
+
+            <h2>Emergency Contacts</h2>
+
+<input
+    type="text"
+    id="emergencyName"
+    placeholder="Enter contact name">
+
+<input
+    type="tel"
+    id="emergencyNumber"
+    placeholder="Enter emergency phone number">
+
+<button id="saveContact">
+    Save Contact
+</button>
+```
+
+            <ul id="contactList">
+                <li>No contacts saved.</li>
+            </ul>
+
+        </section>
+
+        <!-- SOS Section -->
+        <section class="sos-section">
+
+            <button class="sos-btn">
+                SOS EMERGENCY
+            </button>
+
+            <button id="stopEmergency">
+                Stop Emergency
+            </button>
+
+            <p id="status">
+                Guardian Network is ready.
+            </p>
+
+        </section>
+
+        <!-- Safety Check-In -->
+        <section class="checkin-section">
+
+            <h2>Safety Check-In</h2>
+
+            <select id="checkInTime">
+                <option value="1">1 Minute</option>
+                <option value="5">
+                    5 Minutes
+                </option>
+
+                <option value="15" selected>
+                    15 Minutes
+                </option>
+
+                <option value="30">
+                    30 Minutes
+                </option>
+
+                <option value="60">
+                    60 Minutes
+                </option>
+
+            </select>
+
+            <button id="startCheckIn">
+                Start Safety Check-In
+            </button>
+
+            <p id="checkInStatus">
+                No active safety check-in.
+            </p>
+
+        </section>
+
+        <!-- History Navigation -->
+        <section class="history-section">
+
+            <button
+                id="viewHistory"
+                onclick="window.location.href='history.html'">
+
+                View Emergency History
+
+            </button>
+
+        </section>
+
+    </div>
+
+    <!-- Siren Audio -->
+    <audio id="siren" preload="auto">
+        <source src="audio/siren.mp3" type="audio/mpeg">
+        Your browser does not support audio.
+    </audio>
+
+    <script src="js/app.js"></script>
+
+</body>
+</html>
