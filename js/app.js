@@ -15,14 +15,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const startCheckInButton = document.getElementById("startCheckIn");
     const checkInTime = document.getElementById("checkInTime");
+    const customCheckIn = document.getElementById("customCheckIn");
     const checkInStatus = document.getElementById("checkInStatus");
 
     let checkInInterval = null;
 
     /* ================= HELPERS ================= */
 
-    function updateStatus(msg) {
-        statusText.innerText = msg;
+    function updateStatus(message) {
+        statusText.textContent = message;
     }
 
     function getContacts() {
@@ -41,10 +42,12 @@ document.addEventListener("DOMContentLoaded", function () {
         localStorage.setItem("guardianHistory", JSON.stringify(history));
     }
 
-    /* ================= CONTACT DISPLAY ================= */
+    /* ================= CONTACTS ================= */
 
     function displayContacts() {
+
         const contacts = getContacts();
+
         contactList.innerHTML = "";
 
         if (contacts.length === 0) {
@@ -52,25 +55,28 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
 
-        contacts.forEach((c, index) => {
+        contacts.forEach((contact, index) => {
+
             const li = document.createElement("li");
 
             li.innerHTML = `
-                <strong>${c.name}</strong> (${c.number})
-                <button class="delete">Delete</button>
+                <strong>${contact.name}</strong> (${contact.number})
+                <button class="delete-contact">Delete</button>
             `;
 
-            li.querySelector(".delete").addEventListener("click", function () {
+            li.querySelector(".delete-contact").addEventListener("click", function () {
+
                 contacts.splice(index, 1);
+
                 saveContacts(contacts);
                 displayContacts();
+
             });
 
             contactList.appendChild(li);
+
         });
     }
-
-    /* ================= SAVE CONTACT ================= */
 
     saveButton.addEventListener("click", function () {
 
@@ -78,23 +84,31 @@ document.addEventListener("DOMContentLoaded", function () {
         const number = emergencyNumber.value.trim();
 
         if (!name || !number) {
-            alert("Enter name and number");
+            alert("Enter contact name and number.");
+            return;
+        }
+
+        if (!/^\d{11}$/.test(number)) {
+            alert("Phone number must be exactly 11 digits.");
             return;
         }
 
         const contacts = getContacts();
 
         if (contacts.length >= 5) {
-            alert("Max 5 contacts allowed");
+            alert("Maximum of 5 emergency contacts allowed.");
             return;
         }
 
-        if (contacts.some(c => c.number === number)) {
-            alert("Number already exists");
+        if (contacts.some(contact => contact.number === number)) {
+            alert("This number already exists.");
             return;
         }
 
-        contacts.push({ name, number });
+        contacts.push({
+            name,
+            number
+        });
 
         saveContacts(contacts);
 
@@ -102,81 +116,123 @@ document.addEventListener("DOMContentLoaded", function () {
         emergencyNumber.value = "";
 
         displayContacts();
+
+        updateStatus("Contact saved successfully.");
     });
 
-    /* ================= SOS FUNCTION ================= */
+    /* ================= SOS ================= */
 
     function activateSOS() {
 
         if (!navigator.geolocation) {
-            alert("GPS not supported");
+            alert("GPS is not supported on this device.");
             return;
         }
 
         updateStatus("Getting location...");
 
-        navigator.geolocation.getCurrentPosition(function (pos) {
+        navigator.geolocation.getCurrentPosition(
 
-            const lat = pos.coords.latitude;
-            const lng = pos.coords.longitude;
+            function (position) {
 
-            const mapLink = `https://www.google.com/maps?q=${lat},${lng}`;
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
 
-            updateStatus("EMERGENCY ACTIVE");
+                const mapLink =
+                    `https://www.google.com/maps?q=${lat},${lng}`;
 
-            siren.play().catch(() => {});
+                updateStatus("Emergency Active");
 
-            /* SAVE HISTORY */
-            const history = getHistory();
+                if (siren) {
+                    siren.play().catch(() => {});
+                }
 
-            history.unshift({
-                date: new Date().toLocaleString(),
-                location: mapLink,
-                contacts: getContacts().length
-            });
+                const history = getHistory();
 
-            saveHistory(history);
+                history.unshift({
+                    date: new Date().toLocaleString(),
+                    latitude: lat,
+                    longitude: lng,
+                    location: mapLink
+                });
 
-            /* SMS */
-         const contacts = getContacts();
+                saveHistory(history);
 
-const numbers = contacts.map(c => c.number).join(",");
+                const contacts = getContacts();
 
-const message =
-    `EMERGENCY ALERT!\nMy location: ${mapLink}`;
+                if (contacts.length > 0) {
 
-if (numbers) {
+                    const numbers = contacts
+                        .map(contact => contact.number)
+                        .join(",");
 
-    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                    const message =
+                        `EMERGENCY ALERT! My location: ${mapLink}`;
 
-        window.location.href =
-            `sms:${numbers}?body=${encodeURIComponent(message)}`;
+                    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
 
-    } else {
+                        window.location.href =
+                            `sms:${numbers}?body=${encodeURIComponent(message)}`;
 
-        console.log(
-            "SMS feature works best on mobile devices."
+                    }
+
+                }
+
+                window.open(mapLink, "_blank");
+
+                alert("SOS Activated Successfully");
+
+            },
+
+            function (error) {
+
+                console.error(error);
+
+                switch (error.code) {
+
+                    case 1:
+                        alert("Location permission denied.");
+                        break;
+
+                    case 2:
+                        alert("Location unavailable.");
+                        break;
+
+                    case 3:
+                        alert("Location request timed out.");
+                        break;
+
+                    default:
+                        alert("Unable to get location.");
+
+                }
+
+                updateStatus("Location failed.");
+
+            },
+
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            }
+
         );
+
     }
-}
-            alert("SOS SENT:\n" + mapLink);
-
-        }, function () {
-            alert("Unable to get location");
-        });
-    }
-
-    /* ================= STOP EMERGENCY ================= */
-
-    stopEmergencyButton.addEventListener("click", function () {
-        siren.pause();
-        siren.currentTime = 0;
-        updateStatus("Safe");
-    });
-
-    /* ================= SOS BUTTON ================= */
 
     sosButton.addEventListener("click", activateSOS);
+
+    stopEmergencyButton.addEventListener("click", function () {
+
+        if (siren) {
+            siren.pause();
+            siren.currentTime = 0;
+        }
+
+        updateStatus("Safe");
+
+    });
 
     /* ================= CHECK-IN ================= */
 
@@ -184,34 +240,55 @@ if (numbers) {
 
         clearInterval(checkInInterval);
 
-        let time = Number(checkInTime.value) * 60;
+        let minutes;
+
+        if (customCheckIn && customCheckIn.value.trim() !== "") {
+            minutes = Number(customCheckIn.value);
+        } else {
+            minutes = Number(checkInTime.value);
+        }
+
+        if (!minutes || minutes <= 0) {
+            alert("Enter a valid check-in time.");
+            return;
+        }
+
+        let timeLeft = minutes * 60;
 
         updateStatus("Check-in active");
 
         checkInInterval = setInterval(function () {
 
-            let m = Math.floor(time / 60);
-            let s = time % 60;
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
 
-            checkInStatus.innerText =
-                `${m}:${s < 10 ? "0" : ""}${s}`;
+            checkInStatus.textContent =
+                `${mins}:${String(secs).padStart(2, "0")}`;
 
-            time--;
+            timeLeft--;
 
-            if (time < 0) {
+            if (timeLeft < 0) {
+
                 clearInterval(checkInInterval);
 
                 const safe = confirm("Are you safe?");
 
                 if (safe) {
-                    checkInStatus.innerText = "Safe confirmed";
+
                     updateStatus("Safe");
+                    checkInStatus.textContent =
+                        "Safety confirmed.";
+
                 } else {
+
                     activateSOS();
+
                 }
+
             }
 
         }, 1000);
+
     });
 
     /* ================= INIT ================= */
@@ -219,4 +296,5 @@ if (numbers) {
     displayContacts();
 
     console.log("Guardian Network Ready");
+
 });

@@ -6,8 +6,6 @@ document.addEventListener("DOMContentLoaded", function () {
     const clearHistoryButton =
         document.getElementById("clearHistory");
 
-    /* ================= LOAD HISTORY ================= */
-
     function loadHistory() {
 
         const history =
@@ -30,34 +28,63 @@ document.addEventListener("DOMContentLoaded", function () {
 
             div.innerHTML = `
                 <p><strong>${item.date}</strong></p>
-                <p>Contacts Sent: ${item.contacts}</p>
-                <button class="view">View Location</button>
+
+                <button class="view-location">
+                    View Location
+                </button>
+
+                <button class="delete-history">
+                    Delete
+                </button>
             `;
 
-            div.querySelector(".view").addEventListener("click", function () {
-                window.open(item.location, "_blank");
+            div.querySelector(".view-location")
+                .addEventListener("click", function () {
+
+                if (item.location) {
+                    window.open(item.location, "_blank");
+                }
+
+            });
+
+            div.querySelector(".delete-history")
+                .addEventListener("click", function () {
+
+                const confirmDelete =
+                    confirm("Delete this emergency record?");
+
+                if (!confirmDelete) return;
+
+                history.splice(index, 1);
+
+                localStorage.setItem(
+                    "guardianHistory",
+                    JSON.stringify(history)
+                );
+
+                loadHistory();
+
             });
 
             historyContainer.appendChild(div);
-        });
-    }
 
-    /* ================= CLEAR HISTORY ================= */
+        });
+
+    }
 
     clearHistoryButton.addEventListener("click", function () {
 
-        const confirmDelete = confirm("Clear all emergency history?");
+        const confirmDelete =
+            confirm("Clear ALL emergency history?");
 
         if (!confirmDelete) return;
 
         localStorage.removeItem("guardianHistory");
 
         loadHistory();
-    });
 
-    /* ================= INIT ================= */
+    });
 
     loadHistory();
 
-    console.log("History page loaded");
 });
