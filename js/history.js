@@ -24,47 +24,92 @@ document.addEventListener("DOMContentLoaded", function () {
         history.forEach((item, index) => {
 
             const div = document.createElement("div");
+
             div.className = "history-item";
 
+            let contactsHTML = "";
+
+            if (
+                item.contactsSentTo &&
+                item.contactsSentTo.length > 0
+            ) {
+
+                contactsHTML =
+                    "<h4>📱 SOS Sent To:</h4>";
+
+                item.contactsSentTo.forEach(contact => {
+
+                    contactsHTML += `
+                        <p>
+                            👤 ${contact.name}<br>
+                            📞 ${contact.number}
+                        </p>
+                    `;
+
+                });
+
+            } else {
+
+                contactsHTML =
+                    "<p>No contact information available.</p>";
+
+            }
+
             div.innerHTML = `
-                <p><strong>${item.date}</strong></p>
+
+                <h3>🚨 ${item.type || "SOS"}</h3>
+
+                <p>
+                    <strong>Date:</strong>
+                    ${item.date}
+                </p>
+
+                ${contactsHTML}
 
                 <button class="view-location">
-                    View Location
+                    📍 View Location
                 </button>
 
                 <button class="delete-history">
-                    Delete
+                    🗑 Delete
                 </button>
+
             `;
 
             div.querySelector(".view-location")
                 .addEventListener("click", function () {
 
-                if (item.location) {
-                    window.open(item.location, "_blank");
-                }
+                    if (item.location) {
 
-            });
+                        window.open(
+                            item.location,
+                            "_blank"
+                        );
+
+                    }
+
+                });
 
             div.querySelector(".delete-history")
                 .addEventListener("click", function () {
 
-                const confirmDelete =
-                    confirm("Delete this emergency record?");
+                    const confirmDelete =
+                        confirm(
+                            "Delete this emergency record?"
+                        );
 
-                if (!confirmDelete) return;
+                    if (!confirmDelete) return;
 
-                history.splice(index, 1);
+                    history.splice(index, 1);
 
-                localStorage.setItem(
-                    "guardianHistory",
-                    JSON.stringify(history)
-                );
+                    localStorage.setItem(
+                        "guardianHistory",
+                        JSON.stringify(history)
+                    );
 
-                loadHistory();
+                    loadHistory();
 
-            });
+                });
 
             historyContainer.appendChild(div);
 
@@ -72,18 +117,29 @@ document.addEventListener("DOMContentLoaded", function () {
 
     }
 
-    clearHistoryButton.addEventListener("click", function () {
+    if (clearHistoryButton) {
 
-        const confirmDelete =
-            confirm("Clear ALL emergency history?");
+        clearHistoryButton.addEventListener(
+            "click",
+            function () {
 
-        if (!confirmDelete) return;
+                const confirmDelete =
+                    confirm(
+                        "Clear ALL emergency history?"
+                    );
 
-        localStorage.removeItem("guardianHistory");
+                if (!confirmDelete) return;
 
-        loadHistory();
+                localStorage.removeItem(
+                    "guardianHistory"
+                );
 
-    });
+                loadHistory();
+
+            }
+        );
+
+    }
 
     loadHistory();
 

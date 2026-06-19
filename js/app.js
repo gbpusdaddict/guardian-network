@@ -15,7 +15,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const startCheckInButton = document.getElementById("startCheckIn");
     const checkInTime = document.getElementById("checkInTime");
-    const customCheckIn = document.getElementById("customCheckIn");
     const checkInStatus = document.getElementById("checkInStatus");
 
     let checkInInterval = null;
@@ -23,7 +22,9 @@ document.addEventListener("DOMContentLoaded", function () {
     /* ================= HELPERS ================= */
 
     function updateStatus(message) {
-        statusText.textContent = message;
+        if (statusText) {
+            statusText.textContent = message;
+        }
     }
 
     function getContacts() {
@@ -31,7 +32,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function saveContacts(contacts) {
-        localStorage.setItem("guardianContacts", JSON.stringify(contacts));
+        localStorage.setItem(
+            "guardianContacts",
+            JSON.stringify(contacts)
+        );
     }
 
     function getHistory() {
@@ -39,7 +43,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function saveHistory(history) {
-        localStorage.setItem("guardianHistory", JSON.stringify(history));
+        localStorage.setItem(
+            "guardianHistory",
+            JSON.stringify(history)
+        );
     }
 
     /* ================= CONTACTS ================= */
@@ -48,10 +55,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
         const contacts = getContacts();
 
+        if (!contactList) return;
+
         contactList.innerHTML = "";
 
         if (contacts.length === 0) {
-            contactList.innerHTML = "<li>No contacts saved.</li>";
+            contactList.innerHTML =
+                "<li>No contacts saved.</li>";
             return;
         }
 
@@ -60,69 +70,89 @@ document.addEventListener("DOMContentLoaded", function () {
             const li = document.createElement("li");
 
             li.innerHTML = `
-                <strong>${contact.name}</strong> (${contact.number})
-                <button class="delete-contact">Delete</button>
+                <strong>${contact.name}</strong>
+                (${contact.number})
+                <button class="delete-contact">
+                    Delete
+                </button>
             `;
 
-            li.querySelector(".delete-contact").addEventListener("click", function () {
+            li.querySelector(".delete-contact")
+                .addEventListener("click", function () {
 
-                contacts.splice(index, 1);
+                    contacts.splice(index, 1);
 
-                saveContacts(contacts);
-                displayContacts();
+                    saveContacts(contacts);
 
-            });
+                    displayContacts();
+
+                    updateStatus("Contact deleted.");
+                });
 
             contactList.appendChild(li);
-
         });
     }
 
-    saveButton.addEventListener("click", function () {
+    if (saveButton) {
 
-        const name = emergencyName.value.trim();
-        const number = emergencyNumber.value.trim();
+        saveButton.addEventListener("click", function () {
 
-        if (!name || !number) {
-            alert("Enter contact name and number.");
-            return;
-        }
+            const name = emergencyName.value.trim();
+            const number = emergencyNumber.value.trim();
 
-        if (!/^\d{11}$/.test(number)) {
-            alert("Phone number must be exactly 11 digits.");
-            return;
-        }
+            if (!name || !number) {
+                alert("Enter contact name and number.");
+                return;
+            }
 
-        const contacts = getContacts();
+            if (!/^\d{11}$/.test(number)) {
+                alert("Phone number must be exactly 11 digits.");
+                return;
+            }
 
-        if (contacts.length >= 5) {
-            alert("Maximum of 5 emergency contacts allowed.");
-            return;
-        }
+            const contacts = getContacts();
 
-        if (contacts.some(contact => contact.number === number)) {
-            alert("This number already exists.");
-            return;
-        }
+            if (contacts.length >= 5) {
+                alert("Maximum of 5 contacts allowed.");
+                return;
+            }
 
-        contacts.push({
-            name,
-            number
+            if (
+                contacts.some(
+                    contact => contact.number === number
+                )
+            ) {
+                alert("Number already exists.");
+                return;
+            }
+
+            contacts.push({
+                name,
+                number
+            });
+
+            saveContacts(contacts);
+
+            emergencyName.value = "";
+            emergencyNumber.value = "";
+
+            displayContacts();
+
+            updateStatus("Contact saved successfully.");
         });
 
-        saveContacts(contacts);
-
-        emergencyName.value = "";
-        emergencyNumber.value = "";
-
-        displayContacts();
-
-        updateStatus("Contact saved successfully.");
-    });
+    }
 
     /* ================= SOS ================= */
 
     function activateSOS() {
+
+        const contacts = getContacts();
+
+        if (contacts.length === 0) {
+            alert("Please add at least one emergency contact.");
+            return;
+        }
 
         if (!navigator.geolocation) {
             alert("GPS is not supported on this device.");
@@ -141,52 +171,71 @@ document.addEventListener("DOMContentLoaded", function () {
                 const mapLink =
                     `https://www.google.com/maps?q=${lat},${lng}`;
 
-                updateStatus("Emergency Active");
+                updateStatus("🚨 EMERGENCY ACTIVE");
 
                 if (siren) {
                     siren.play().catch(() => {});
                 }
 
+                const contactsSentTo = contacts.map(contact => ({
+                    name: contact.name,
+                    number: contact.number
+                }));
+
                 const history = getHistory();
 
                 history.unshift({
+                    type: "SOS",
                     date: new Date().toLocaleString(),
+                    location: mapLink,
                     latitude: lat,
                     longitude: lng,
-                    location: mapLink
+                    contactsSentTo: contactsSentTo
                 });
+
+                if (history.length > 100) {
+                    history.pop();
+                }
 
                 saveHistory(history);
 
-                const contacts = getContacts();
+                const numbers =
+                    contacts.map(c => c.number).join(",");
 
-                if (contacts.length > 0) {
+                const firstNumber =
+                    contacts[0].number;
 
-                    const numbers = contacts
-                        .map(contact => contact.number)
-                        .join(",");
+                const message =
+`🚨 EMERGENCY ALERT 🚨
 
-                    const message =
-                        `EMERGENCY ALERT! My location: ${mapLink}`;
+I need help immediately.
 
-                    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+My location:
+${mapLink}`;
 
-                        window.location.href =
-                            `sms:${numbers}?body=${encodeURIComponent(message)}`;
+                if (
+                    /Android|iPhone|iPad|iPod/i.test(
+                        navigator.userAgent
+                    )
+                ) {
 
-                    }
-
+                    window.location.href =
+                        `sms:${numbers}?body=${encodeURIComponent(message)}`;
                 }
+
+                setTimeout(() => {
+                    window.location.href =
+                        `tel:${firstNumber}`;
+                }, 2000);
 
                 window.open(mapLink, "_blank");
 
-                alert("SOS Activated Successfully");
-
+                alert("SOS ACTIVATED");
             },
 
             function (error) {
 
-                console.error(error);
+                console.log(error);
 
                 switch (error.code) {
 
@@ -204,11 +253,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
                     default:
                         alert("Unable to get location.");
-
                 }
 
                 updateStatus("Location failed.");
-
             },
 
             {
@@ -216,80 +263,94 @@ document.addEventListener("DOMContentLoaded", function () {
                 timeout: 15000,
                 maximumAge: 0
             }
-
         );
-
     }
-
-    sosButton.addEventListener("click", activateSOS);
-
-    stopEmergencyButton.addEventListener("click", function () {
-
-        if (siren) {
-            siren.pause();
-            siren.currentTime = 0;
-        }
-
-        updateStatus("Safe");
-
-    });
 
     /* ================= CHECK-IN ================= */
 
-    startCheckInButton.addEventListener("click", function () {
+    if (startCheckInButton) {
 
-        clearInterval(checkInInterval);
+        startCheckInButton.addEventListener("click", function () {
 
-        let minutes;
+            clearInterval(checkInInterval);
 
-        if (customCheckIn && customCheckIn.value.trim() !== "") {
-            minutes = Number(customCheckIn.value);
-        } else {
-            minutes = Number(checkInTime.value);
-        }
+            const minutes = Number(checkInTime.value);
 
-        if (!minutes || minutes <= 0) {
-            alert("Enter a valid check-in time.");
-            return;
-        }
-
-        let timeLeft = minutes * 60;
-
-        updateStatus("Check-in active");
-
-        checkInInterval = setInterval(function () {
-
-            const mins = Math.floor(timeLeft / 60);
-            const secs = timeLeft % 60;
-
-            checkInStatus.textContent =
-                `${mins}:${String(secs).padStart(2, "0")}`;
-
-            timeLeft--;
-
-            if (timeLeft < 0) {
-
-                clearInterval(checkInInterval);
-
-                const safe = confirm("Are you safe?");
-
-                if (safe) {
-
-                    updateStatus("Safe");
-                    checkInStatus.textContent =
-                        "Safety confirmed.";
-
-                } else {
-
-                    activateSOS();
-
-                }
-
+            if (!minutes || minutes <= 0) {
+                alert("Select a valid time.");
+                return;
             }
 
-        }, 1000);
+            let timeLeft = minutes * 60;
 
-    });
+            updateStatus("Safety Check-In Active");
+
+            checkInInterval = setInterval(function () {
+
+                const mins =
+                    Math.floor(timeLeft / 60);
+
+                const secs =
+                    timeLeft % 60;
+
+                if (checkInStatus) {
+                    checkInStatus.textContent =
+                        `${mins}:${String(secs).padStart(2, "0")}`;
+                }
+
+                timeLeft--;
+
+                if (timeLeft < 0) {
+
+                    clearInterval(checkInInterval);
+
+                    const safe =
+                        confirm("Are you safe?");
+
+                    if (safe) {
+
+                        updateStatus("User confirmed safe.");
+
+                        if (checkInStatus) {
+                            checkInStatus.textContent =
+                                "Safety confirmed.";
+                        }
+
+                    } else {
+
+                        activateSOS();
+
+                    }
+                }
+
+            }, 1000);
+        });
+
+    }
+
+    /* ================= STOP EMERGENCY ================= */
+
+    if (stopEmergencyButton) {
+
+        stopEmergencyButton.addEventListener(
+            "click",
+            function () {
+
+                if (siren) {
+                    siren.pause();
+                    siren.currentTime = 0;
+                }
+
+                updateStatus("Emergency stopped.");
+            }
+        );
+    }
+
+    /* ================= BUTTONS ================= */
+
+    if (sosButton) {
+        sosButton.addEventListener("click", activateSOS);
+    }
 
     /* ================= INIT ================= */
 
